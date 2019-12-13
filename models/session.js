@@ -11,12 +11,11 @@ const SessionSchema = new mongoose.Schema({
 			type: mongoose.Schema.Types.ObjectId
 		}
 	],
-	allowUnsigned: {
-		type: Boolean,
-		required: true
-	}
-	lastFailedLogin: {
-		type: Date
+	checkin: {
+		type: Object
+	},
+	connections: {
+		
 	}
 });
 
@@ -35,7 +34,28 @@ SessionSchema.methods.leaveSession = function (id){
 
 }
 
-
+SessionSchema.methods.checkin = function(){
+	return User.find({_id: {$in: currentUsers}}).then(users => {
+		const checkins = {};
+		let min = 0;
+		let max = 0;
+		for (const i in users){
+			if (!users[i].checkin){
+				return;
+			}
+			const {id, checkin} = users[i]
+			const {time, date} = checkin;
+			checkins[id] = {time, latency: new Date() - date}
+			const curTime = checkins[id].time*1000 + checkins[id].latency
+			min = curTime < min ? curTime : min;
+			max = curTime > max ? curTime : max;
+		}
+		for (const i in users)
+		if (max-min > 2000){
+			return 
+		}
+	})
+}
 
 SessionSchema.methods.removeToken = function (token, disconnecting) {
 	var user = this;

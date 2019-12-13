@@ -1,5 +1,6 @@
+import ObjectManager from 'svz-object-manager';
+const socketIO = require('socket.io')
 const mongoose = require('mongoose');
-const _ = require('lodash');
 
 const GroupSchema = new mongoose.Schema({
 	name: {
@@ -9,22 +10,37 @@ const GroupSchema = new mongoose.Schema({
 	},
 	users: [
 		{
-			type: mongoose.Schema.Types.ObjectId,
+			type: Object,
 			required: true
 		}
-	]
-	,
+	],
 	admin: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
 			required: true
 		}
 	],
+	invited: [
+		{
+			type: Object
+		}
+	],
 	history: {
 		type: mongoose.Schema.Types.ObjectId,
 		required: true,
+	},
+	group: {
+		type: Object
 	}
 })
+
+GroupSchema.methods.addUser = (type, token) => {
+	User.findByToken(token).then(user => {
+		this.users.push({
+			name: null,
+		})
+	})
+}
 
 const Group = mongoose.model('Group', GroupSchema);		
 

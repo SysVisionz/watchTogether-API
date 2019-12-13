@@ -4,6 +4,8 @@ const jwt = require ('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
+const {Session} = require('./session');
+const {Connection} = require('./connection');
 const {hashTag, emailInfo, newUser} = require ('../db/dataConfig')
 
 const UserSchema = new mongoose.Schema({
@@ -24,9 +26,6 @@ const UserSchema = new mongoose.Schema({
 		minlength: 6
 	},
 	displayName: {
-		type: String
-	},
-	name: {
 		type: String
 	},
 	tokens: [
@@ -55,12 +54,38 @@ const UserSchema = new mongoose.Schema({
 	},
 	lastFailedLogin: {
 		type: Date
-	}
+	},
+	groups: [
+		{
+			type: mongoose.Schema.Types.ObjectId
+		}
+	],
+	friends: [
+		{
+			type: mongoose.Schema.Types.ObjectId
+		}
+	],
+	connection:
+	{
+		type: mongoose.Schema.Types.ObjectId
+	},
 });
 
 UserSchema.methods.toJSON = function () {
 	const {displayName, name, attentions} = this;
 	return {displayName, name, attentions}
+}
+
+UserSchema.methods.getFriendsList = function(){
+	Friend.find({'_id': {
+		$in: this.friends;
+	}}).then(friendsList => {
+		retval = {};
+		for (const i in friendsList){
+			const {}
+			retval[]
+		}
+	})
 }
 
 UserSchema.methods.generateAuthToken = function (persist) {
@@ -180,7 +205,6 @@ UserSchema.statics.findByCredentials = function (displayName, password) {
 					}
 					reject({status: 403, message: 'Invalid password.'});
 				}
-			})
 		})
 	})
 	.catch(err => Promise.reject(err));

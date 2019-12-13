@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {User} = require('../models');
+const {User, FriendsList} = require('../models');
 
 
 const addFriend = (req, res) => {
@@ -8,7 +8,7 @@ const addFriend = (req, res) => {
 		if (!user){
 			return Promise.reject({status: 403, message: 'You must be a logged in user to add friends.'});
 		}
-		return User.find({username: req.username}).then(friend => {
+		return User.findOne({displayName: req.username}).then(friend => {
 			if (!friend){
 				return Promise.reject({status: 401, message: 'Sorry, no user found with that username.'});
 			}
@@ -22,7 +22,7 @@ const acceptFriend = (req, res) => {
 		if (!user){
 			return Promise.reject({status: 403, message: 'You must be a logged in user to add friends.'});
 		}
-		return User.find({req.username}).then( friend => {
+		return User.findOne({req.username}).then( friend => {
 			if (!friend){
 				return Promise.reject({status: 404, message: 'Error, no user found with that username.'});
 			}
@@ -48,15 +48,13 @@ const checkFriendList = friends => {
 	if(!friends[0]){
 		return Promise.reject({status: 404, message: 'Friendslist is empty.'})
 	}
-	return User.findById(friends[0]._id, friend => {
-		return friends[1] ? [friend.status, ...checkFriendList(friends.slice(1))] : [friend.status];
-	})
+	return 
 }
 
 const friendStatus = (req, res) => {
 	token = req.header('x-auth');
 	return User.findByToken(token).then(user => {
-		return res.send(JSON.parse(checkFriendList(user.friends)));
+		return FriendsList.find({});
 	})
 }
 

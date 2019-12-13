@@ -19,6 +19,23 @@ const authByToken = (req, res) => {
 	});
 }
 
+const init = (token, socket, connected) => {
+	User.findByToken(token).then(user => {
+		socket.type = 'user';
+		connected.users[user.token] = true;
+	}).catch(() => {
+		socket.type = 'guest';
+		return Guest.findByToken(token).then(guest => {
+			if(!guest){
+				guest = new Guest({socket})
+				return guest.generateAuthToken()
+					.then(token => connected.guests[guest.token] = true)
+					.catch(() => console.log('Error generating guest token'))
+			}
+		})
+	})
+}
+
 const login = (req, res) => {
 	User.findByCredentials(body.email, body.password).then( user => {
 		return user.generateAuthToken(body.persist).then(token => {
@@ -32,10 +49,6 @@ const newUser = (req, res) => {
 	let decoded;
 	try {
 		decoded = jwt.verify(body.token, newUser)
-	}
-	const displayOwned = User.findOne({displayName: body.displayName}).then(user => !!users).catch(() => false);
-	if (displayOwned){
-		body.displayName += (Math.round(Math.random()*1000));
 	}
 	let user = new User (body);
 	user.generateAuthToken()
