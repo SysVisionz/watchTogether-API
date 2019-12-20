@@ -1,3 +1,4 @@
+import Invite from './invite'
 const mongoose = require('mongoose');
 
 const SessionSchema = new mongoose.Schema({
@@ -13,9 +14,6 @@ const SessionSchema = new mongoose.Schema({
 	],
 	checkin: {
 		type: Object
-	},
-	connections: {
-		
 	}
 });
 
@@ -32,6 +30,10 @@ SessionSchema.userPaused = {
 
 SessionSchema.methods.leaveSession = function (id){
 
+}
+
+SessionSchema.methods.emit = function (type, message, socket) {
+	socket.broadcast.to(this._id).emit(type, message)
 }
 
 SessionSchema.methods.checkin = function(){
@@ -146,18 +148,17 @@ SessionSchema.statics.findByCredentials = function (email, password) {
 	.catch(err => Promise.reject(err));
 }
 
-SessionSchema.pre('save', function (next) {
-	var user = this;
-	if (user.isModified('password')) {
-		bcrypt.genSalt(10, (err, salt) => {
-			bcrypt.hash(user.password, salt, (err, hash) => {
-				user.password = hash;
-				next();
-			}); 
-		});
-	}
-	else {
-		next();
+SessionSchema.pre('remove', function (next) {
+	Invite.find({session: this._id}).then(invites) {
+		for (const i in invites){
+			if (type === 'session'){
+				invites[i].remove();
+			}
+			else {
+				invites[i].remove('session');
+			}
+		}
+		return 	next();
 	}
 })
 

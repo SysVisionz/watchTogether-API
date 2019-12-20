@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const {Session} = require('./session');
 const {Connection} = require('./connection');
 const {hashTag, emailInfo, newUser} = require ('../db/dataConfig')
+const functionMatch = 
 
 const UserSchema = new mongoose.Schema({
 	email: {
@@ -27,6 +28,10 @@ const UserSchema = new mongoose.Schema({
 	},
 	displayName: {
 		type: String
+		validate: {
+			validator: val => !validator.isEmail(val),
+			message: '{VALUE} is an email address. Email addresses cannot be used as display names.'
+		}
 	},
 	tokens: [
 		{
@@ -41,14 +46,6 @@ const UserSchema = new mongoose.Schema({
 			}
 		}
 	],
-	attentions: {
-		friend: {
-			type: Boolean
-		},
-		invite: {
-			type: Boolean
-		}
-	},
 	failedLogins: {
 		type: Number
 	},
@@ -69,6 +66,12 @@ const UserSchema = new mongoose.Schema({
 	{
 		type: mongoose.Schema.Types.ObjectId
 	},
+	invites: {
+		type: mongoose.Schema.Types.ObjectId
+	},
+	invitations {
+		type: mongoose.Schema.Types.ObjectId
+	}
 });
 
 UserSchema.methods.toJSON = function () {
@@ -115,6 +118,13 @@ UserSchema.statics.findByToken = function (token) {
 		}
 		return Promise.reject();
 	}).catch(() => Promise.reject({status:403, message: 'Invalid token provided.'}))
+}
+
+UserSchema.statics.findByEmailOrDisplayName = (name) => {
+	this.find( { email: { $text: { $search: name } } } ).lean().then( users => {
+		//if it's an email, no need to search displayNames.
+		return validator.isEmail(name) ? users : this.find( { displayName : { $text: { $search: name } } } ).lean().then(additional => [...users, ...additional])
+	})
 }
 
 UserSchema.methods.removeToken = function (token, disconnecting) {
@@ -219,6 +229,9 @@ UserSchema.pre('save', function (next) {
 				next();
 			}); 
 		});
+	}
+	if (user.isModified('displayName')){
+		if (user.displayName.contains('@') && user.displayName.substring(user.displayName.indexOf('@')).)
 	}
 	else {
 		next();

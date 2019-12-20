@@ -23,6 +23,7 @@ const init = (token, socket, connected) => {
 	User.findByToken(token).then(user => {
 		socket.type = 'user';
 		connected.users[user.token] = true;
+		session = new Session {}
 	}).catch(() => {
 		socket.type = 'guest';
 		return Guest.findByToken(token).then(guest => {
@@ -32,6 +33,7 @@ const init = (token, socket, connected) => {
 					.then(token => connected.guests[guest.token] = true)
 					.catch(() => console.log('Error generating guest token'))
 			}
+			connected.guests[guest.token] = true;
 		})
 	})
 }
